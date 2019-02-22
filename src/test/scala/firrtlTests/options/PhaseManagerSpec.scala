@@ -10,6 +10,8 @@ import firrtl.annotations.{Annotation, NoTargetAnnotation}
 
 import java.io.{File, PrintWriter}
 
+import sys.process._
+
 trait IdentityPhase extends Phase {
   def transform(annotations: AnnotationSeq): AnnotationSeq = annotations
 }
@@ -185,19 +187,34 @@ class PhaseManagerSpec extends FlatSpec with Matchers {
 
   def writeGraphviz(pm: PhaseManager, dir: String): Unit = {
 
+    /** Convert a Graphviz file to PNG using */
+    def maybeToPng(f: File): Unit = try {
+      s"dot -Tpng -O ${f}" !
+    } catch {
+      case _: java.io.IOException =>
+    }
+
     val d = new File(dir)
     d.mkdirs()
 
     {
-      val w = new PrintWriter(new File(d + "/dependencyGraph.dot"))
+      val f = new File(d + "/dependencyGraph.dot")
+      val w = new PrintWriter(f)
       w.write(pm.dependenciesToGraphviz)
       w.close
+      maybeToPng(f)
     }
 
     {
+      val f = new File(d + "/phaseOrder.dot")
       val w = new PrintWriter(new File(d + "/phaseOrder.dot"))
-      w.write(pm.phaseOrderToGraphviz())
-      w.close
+      try {
+        w.write(pm.phaseOrderToGraphviz())
+        w.close
+        maybeToPng(f)
+      } catch {
+        case _: PhaseManagerException =>
+      }
     }
 
   }
@@ -287,7 +304,9 @@ class PhaseManagerSpec extends FlatSpec with Matchers {
 
     info("with the custom transform it runs:    First -> Custom -> Second")
     val pmCustom = new PhaseManager(Set(f.Custom, f.Second))
+
     writeGraphviz(pmCustom, "test_run_dir/SingleDependent")
+
     pmCustom.flattenedPhaseOrder should be (Seq(f.First, f.Custom, f.Second))
   }
 }
