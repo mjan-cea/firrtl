@@ -1,5 +1,5 @@
 ;buildInfoPackage: chisel3, version: 3.1.3, scalaVersion: 2.11.12, sbtVersion: 1.1.1, builtAtString: 2018-09-12 19:37:29.007, builtAtMillis: 1536781049007
-circuit Lipsi : 
+circuit LipsiTop : 
   module Memory : 
     input clock : Clock
     input reset : UInt<1>
@@ -253,4 +253,28 @@ circuit Lipsi :
     io.dbg.accu <= accuReg @[Lipsi.scala 219:15]
     io.dbg.pc <= pcReg @[Lipsi.scala 220:13]
     io.dbg.exit <= exitReg @[Lipsi.scala 221:15]
+    
+  module LipsiTop : 
+    input clock : Clock
+    input reset : UInt<1>
+    output io : {dout : UInt<8>, flip din : UInt<8>, dbg : {pc : UInt<8>, accu : UInt<8>, exit : UInt<1>}}
+    
+    wire x : UInt<1> @[Lipsi.scala 231:15]
+    reg _T_13 : UInt<1>, clock @[Lipsi.scala 232:15]
+    _T_13 <= reset @[Lipsi.scala 232:15]
+    x <= _T_13 @[Lipsi.scala 232:5]
+    wire y : UInt<1> @[Lipsi.scala 233:15]
+    node _T_16 = eq(x, UInt<1>("h00")) @[Lipsi.scala 234:8]
+    y <= _T_16 @[Lipsi.scala 234:5]
+    reg resetRegs : UInt<1>, clock @[Lipsi.scala 236:26]
+    resetRegs <= y @[Lipsi.scala 236:26]
+    inst Lipsi of Lipsi @[Lipsi.scala 258:23]
+    Lipsi.clock <= clock
+    Lipsi.reset <= reset
+    Lipsi.reset <= resetRegs @[Lipsi.scala 260:17]
+    io.dbg.exit <= Lipsi.io.dbg.exit @[Lipsi.scala 261:8]
+    io.dbg.accu <= Lipsi.io.dbg.accu @[Lipsi.scala 261:8]
+    io.dbg.pc <= Lipsi.io.dbg.pc @[Lipsi.scala 261:8]
+    Lipsi.io.din <= io.din @[Lipsi.scala 261:8]
+    io.dout <= Lipsi.io.dout @[Lipsi.scala 261:8]
     
